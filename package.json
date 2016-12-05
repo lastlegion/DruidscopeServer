@@ -12,6 +12,8 @@
     "express": "~4.13.1",
     "jade": "~1.11.0",
     "morgan": "~1.6.1",
+    "plywood": "^0.15.6",
+    "plywood-druid-requester": "^1.5.9",
     "serve-favicon": "~2.3.0"
   }
 }
