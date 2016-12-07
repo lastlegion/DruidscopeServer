@@ -1,4 +1,22 @@
+
+
 {
-    "group": ["2", "3"],
-    "country": ["Qatar", "Oman"]
+    
+    "filters": {
+        "group": {
+            "filter":   ["2", "3", "4", "5", "6", "7", "8"],
+            "type": "categorical"
+        }
+    }, 
+    "aggregations": {
+        "A": {
+            "type": "count"
+        }
+    }, 
+    "select": {
+        "email": {
+            "limit": 10
+        }
+
+    }
 }

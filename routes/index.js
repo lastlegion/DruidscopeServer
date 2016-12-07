@@ -12,13 +12,15 @@ var druidRequesterFactory = require('plywood-druid-requester').druidRequesterFac
 
 /* Plywood connection*/ 
 var druidRequester = druidRequesterFactory({
-  host: '127.0.0.1:8082'
+  host: '127.0.0.1:8082',
+  allowSelectQueries: true
 }); 
 
 var randData = External.fromJS({
   engine: 'druid', 
   source: 'out2', 
   timeAttribute: 'timestamp',
+  allowSelectQueries: true
 
 }, druidRequester);
 
@@ -38,7 +40,9 @@ router.get('/', function(req, res, next) {
 
 
 router.post('/filter', function(req, res, next){
-  var query = req.body;
+  var query = req.body.filters;
+  var aggregations = req.body.aggregations;
+  var select = req.body.select;
   console.log(query);
   var ex = ply()
       .apply("out2", $('out2')
@@ -57,10 +61,10 @@ router.post('/filter', function(req, res, next){
   //Apply filters
   //
   for(var attribute in query) {
-    console.log(attribute);
-    console.log(query[attribute]);
+
+    var filter = query[attribute].filter;
     ex = ex.apply("out2", $('out2')
-        .filter($(attribute).in(query[attribute])));
+        .filter($(attribute).in(filter)));
     //console.log(ex);
    // ex = ex.filter($("country").in(query[attribute]));
 
@@ -69,8 +73,33 @@ router.post('/filter', function(req, res, next){
   //ex = ex.filter($("country").in(["Qatar", "Omam"]));
   //Compute aggregates
 
+  //Perform aggregations
+  for(var attribute in aggregations){
+    var aggregation = aggregations[attribute];
+    console.log(attribute);
+    console.log(aggregation);
+    ex = ex.apply(attribute, $("out2").split("$"+attribute, attribute)
+        .apply("Count", $("out2").count()));
+  }
+
+  //Perform selections
+  for(var attribute in select){
+    ex = ex.apply("select", $("out2").select(attribute).limit(select[attribute].limit));
+  }
+
+  /*
   ex = ex.apply("countries", $("out2").split("$country", "country")
     .apply("Count", $("out2").count()));
+
+  ex = ex.apply("A", $("out2").split("$A", "A")
+    .apply("Count", $("out2").count()));
+  ex = ex.apply("B", $("out2").split("$B", "B")
+    .apply("Count", $("out2").count()));
+  ex = ex.apply("C", $("out2").split("$B", "B")
+    .apply("Count", $("out2").count()));
+  ex = ex.apply("select", $("out2").select("D"));
+  */
+
     /*      
     .and($('A').in(["0", "1", "2"]))))
     .apply("Count", $('out2').count())
@@ -82,8 +111,8 @@ router.post('/filter', function(req, res, next){
     
     
   ex.compute(context).then(function(data){
-    console.log(JSON.stringify(data.toJS(), null ,2));
-    res.end();
+    res.end(JSON.stringify(data.toJS(), null ,2));
+    //res.end();
   }).done();
 
   
